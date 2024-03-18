@@ -1,0 +1,24 @@
+name: CI
+
+on: [push]
+
+jobs:
+  test:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: "1.22"
+
+      - name: Install just
+        uses: taiki-e/install-action@just
+
+      - name: Linting
+        run: just lint
+
+      - name: Testing
+        run: just test
