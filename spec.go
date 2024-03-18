@@ -12,6 +12,7 @@ import (
 // A Type is one of the valid types for fields.
 type Type string
 
+// Constants for types.
 const (
 	Boolean  Type = "boolean"
 	String   Type = "string"
