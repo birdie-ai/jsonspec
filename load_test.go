@@ -30,6 +30,7 @@ func TestLoad(t *testing.T) {
 	testLoad(t, `123.0`, 123.0)
 	testLoad(t, `123.456`, 123.456)
 	testLoad(t, `"2024-03-07T11:38:47Z"`, time.Date(2024, 3, 7, 11, 38, 47, 0, time.UTC))
+	testLoad(t, `"2024-03-07T11:38:47.123456789Z"`, time.Date(2024, 3, 7, 11, 38, 47, 123456789, time.UTC))
 
 	testLoad(t,
 		`{"first_name": "Jane", "last_name": "Doe"}`,
