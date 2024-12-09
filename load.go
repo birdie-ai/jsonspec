@@ -7,9 +7,21 @@ import (
 	"time"
 )
 
-// Load a JSON value from [data] into [o]. It returns an error if the data is invalid.
-func Load(data []byte, o any) error {
-	pointerType := reflect.TypeOf(o)
+// LoadJSON load a JSON value from [source] into [target]. It returns an error in case of invalid
+// JSON or in case the data doesn't match the spec for [target].
+func LoadJSON(source []byte, target any) error {
+	var input any
+	err := json.Unmarshal(source, &input)
+	if err != nil {
+		return err
+	}
+	return Load(input, target)
+}
+
+// Load load [source] into [target]. It returns an error in case the data doesn't match the spec
+// for [target].
+func Load(source, target any) error {
+	pointerType := reflect.TypeOf(target)
 	if pointerType.Kind() != reflect.Pointer {
 		return errors.New("argument to Load must be a pointer")
 	}
@@ -21,21 +33,14 @@ func Load(data []byte, o any) error {
 		return err
 	}
 
-	// parse JSON
-	var input any
-	err = json.Unmarshal(data, &input)
+	// validate source
+	err = spec.Validate(source)
 	if err != nil {
 		return err
 	}
 
-	// validate input
-	err = spec.Validate(input)
-	if err != nil {
-		return err
-	}
-
-	// load into o
-	load(spec, input, reflect.ValueOf(o).Elem())
+	// load into target
+	load(spec, source, reflect.ValueOf(target).Elem())
 
 	return nil
 }

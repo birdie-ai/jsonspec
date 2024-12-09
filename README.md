@@ -36,10 +36,10 @@ You can generate a spec for this type as follows:
 Now you can call `spec.ValidateJSON` to check if a JSON document matches the spec. It'll return an
 error if any of the fields have the wrong type or if any fields marked as required are missing.
 
-You can also call `Load` to load a Person from JSON:
+You can also call `LoadJSON` to load a Person from JSON:
 
     var person Person
-    err := jsonspec.Load(data, &person) // data is a []byte
+    err := jsonspec.LoadJSON(data, &person) // data is a []byte
 
 This will generate a spec for Person, validate that the input matches the spec, and store the data
 in `person`.
