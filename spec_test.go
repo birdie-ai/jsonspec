@@ -102,6 +102,39 @@ func TestSpecValidateSuccess(t *testing.T) {
 				},
 			},
 		},
+		{
+			struct {
+				Args map[string]any `tags:"secret"`
+			}{
+				Args: map[string]any{
+					"name": "john",
+					"a": map[string]any{
+						"b": "c",
+					},
+				},
+			},
+			map[string]any{
+				"args": map[string]any{
+					"name": "john",
+					"a": map[string]any{
+						"b": "c",
+					},
+				},
+			},
+		},
+		{
+			struct {
+				Name string         `required:"true"`
+				Args map[string]any `tags:"secret"`
+			}{
+				Name: "John",
+				Args: map[string]any{"a": "1", "b": 2, "c": false},
+			},
+			map[string]any{
+				"name": "john",
+				"args": map[string]any{"a": "1", "b": 2, "c": false},
+			},
+		},
 	}
 	for _, c := range cases {
 		spec, err := For(c.o)

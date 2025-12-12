@@ -36,9 +36,19 @@ func specForType(typ reflect.Type) (*Spec, error) {
 		return specForObject(typ)
 	case reflect.Slice:
 		return specForArray(typ)
+	case reflect.Map:
+		return specForMap(typ)
 	}
 
 	return nil, fmt.Errorf("cannot generate spec for type %v", typ)
+}
+
+func specForMap(typ reflect.Type) (*Spec, error) {
+	// No way to generate spec for an arbitrary map, so in case it's used, we
+	// just return that it's an object
+	return &Spec{
+		Type: Object,
+	}, nil
 }
 
 func specForObject(typ reflect.Type) (*Spec, error) {
