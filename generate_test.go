@@ -13,6 +13,8 @@ func TestSpecFor(t *testing.T) {
 	objectSpec := Spec{Type: Object, Fields: map[string]Field{"admin": {Spec: Spec{Type: Boolean}}}}
 	array := []string{}
 	arraySpec := Spec{Type: Array, Elements: &Spec{Type: String}}
+	mapObj := map[string]any{"admin": true}
+	mapSpec := Spec{Type: Object}
 	cases := []struct {
 		o    any
 		want Spec
@@ -26,6 +28,8 @@ func TestSpecFor(t *testing.T) {
 		{&object, objectSpec},
 		{array, arraySpec},
 		{&array, arraySpec},
+		{mapObj, mapSpec},
+		{&mapObj, mapSpec},
 	}
 	for _, c := range cases {
 		got, err := For(c.o)

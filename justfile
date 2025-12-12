@@ -1,5 +1,5 @@
 # tool versions
-golangci_lint_version := "v1.55.2"
+golangci_lint_version := "v1.64.2"
 
 # test and lint the code
 default: test lint

@@ -36,6 +36,8 @@ func specForType(typ reflect.Type) (*Spec, error) {
 		return specForObject(typ)
 	case reflect.Slice:
 		return specForArray(typ)
+	case reflect.Map:
+		return &Spec{Type: Object}, nil
 	}
 
 	return nil, fmt.Errorf("cannot generate spec for type %v", typ)
