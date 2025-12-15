@@ -83,17 +83,22 @@ func load(spec *Spec, input any, target reflect.Value) {
 			inputMap = input.(map[string]any)
 		}
 		typ := target.Type()
-		for i := 0; i < typ.NumField(); i++ {
-			name := typ.Field(i).Name
-			key := translateName(name)
-			field, ok := spec.Fields[key]
-			if ok {
-				value := inputMap[key]
-				if value == nil {
-					value = field.Default
-				}
-				if value != nil {
-					load(&field.Spec, value, target.FieldByName(name))
+		switch typ.Kind() {
+		case reflect.Map:
+			target.Set(reflect.ValueOf(inputMap))
+		default:
+			for i := 0; i < typ.NumField(); i++ {
+				name := typ.Field(i).Name
+				key := translateName(name)
+				field, ok := spec.Fields[key]
+				if ok {
+					value := inputMap[key]
+					if value == nil {
+						value = field.Default
+					}
+					if value != nil {
+						load(&field.Spec, value, target.FieldByName(name))
+					}
 				}
 			}
 		}
