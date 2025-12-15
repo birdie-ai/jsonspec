@@ -54,6 +54,14 @@ func TestLoadJSON(t *testing.T) {
 		}{"Jane", "Smith"},
 	)
 
+	testLoadJSON(t,
+		`{"first_name": "Jane", "args":{"a":"1", "b":2, "c":{"set":true}}}`,
+		struct {
+			FirstName string
+			Args      map[string]any
+		}{FirstName: "Jane", Args: map[string]any{"a": "1", "b": 2.0, "c": map[string]any{"set": true}}},
+	)
+
 	testLoadJSON(t, `["jane", "joe", "julia"]`, []string{"jane", "joe", "julia"})
 	testLoadJSON(t, `[1, 2, 3]`, []int{1, 2, 3})
 	testLoadJSON(t, `[[1], [2, 3]]`, [][]int{{1}, {2, 3}})
