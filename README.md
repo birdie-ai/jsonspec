@@ -60,7 +60,7 @@ Tags that only annotate the generated spec for downstream tooling (such as the c
 management frontend) and are ignored by `Validate`:
 
 - `description:"..."`: human-readable description of the field.
-- `default:"..."`: default value for the field (parsed according to its type).
+- `default:"..."`: default value for the field (parsed according to its type) if no value is provided in the input JSON.
 - `tags:"a,b,c"`: list of free-form tags attached to the field.
 - `config:"credential|connection|schedule"`: configuration layer the field belongs to. Empty
   means the field is not user-facing.
