@@ -8,114 +8,109 @@ validate the arguments for connectors.
 
 The usual way to use it is to define a struct type for the expected data. For example:
 
-    type Person struct {
-        ID        int    `description:"Unique ID" required:"true"`
-        FirstName string
-        LastName  string `required:"true"`
-        Password  string `required:"true" tags:"secret"`
-        IsAdmin   bool
+    type DatabaseSource struct {
+        AuthMethod string `description:"Authentication method" enum:"password,iam" config:"credential" required:"true"`
+        User       string `config:"credential" required:"true"`
+        Password   string `config:"credential" tags:"secret" visible_when:"auth_method=password"`
+        Host       string `config:"connection" required:"true"`
+        Port       int    `config:"connection" default:"5432" advanced:"true"`
+        Schedule   string `config:"schedule" default:"0 * * * *"`
     }
 
 For this type the library will expect a JSON object like the following:
 
     {
-        "id": 123,
-        "first_name": "Jane",
-        "last_name": "Doe",
+        "auth_method": "password",
+        "user": "alice",
         "password": "hunter2",
-        "is_admin": true
+        "host": "db.example.com",
+        "port": 5433,
+        "schedule": "0 */6 * * *"
     }
 
 The library will automatically convert between the different conventions for field names, for
-example tuning `FirstName` into `first_name`.
+example turning `AuthMethod` into `auth_method`.
 
 You can generate a spec for this type as follows:
 
-    spec, err := jsonspec.For(new(Person))
+    spec, err := jsonspec.For(new(DatabaseSource))
 
 Now you can call `spec.ValidateJSON` to check if a JSON document matches the spec. It'll return an
 error if any of the fields have the wrong type or if any fields marked as required are missing.
 
-You can also call `LoadJSON` to load a Person from JSON:
+You can also call `LoadJSON` to load a DatabaseSource from JSON:
 
-    var person Person
-    err := jsonspec.LoadJSON(data, &person) // data is a []byte
+    var source DatabaseSource
+    err := jsonspec.LoadJSON(data, &source) // data is a []byte
 
-This will generate a spec for Person, validate that the input matches the spec, and store the data
-in `person`.
+This will generate a spec for DatabaseSource, validate that the input matches the spec, and store
+the data in `source`.
 
 
 ## Struct tags
 
-The following tags are recognized on struct fields:
+The following tags are recognized on struct fields.
+
+Tags that affect input validation:
+
+- `required:"true"`: the field must be provided in the JSON as a non-zero value.
+- `enum:"a,b,c"`: list of allowed values. Only enforced for string fields.
+
+Tags that only annotate the generated spec for downstream tooling (such as the connector
+management frontend) and are ignored by `Validate`:
 
 - `description:"..."`: human-readable description of the field.
-- `required:"true"`: the field must be set for the object to be valid.
 - `default:"..."`: default value for the field (parsed according to its type).
 - `tags:"a,b,c"`: list of free-form tags attached to the field.
-- `enum:"a,b,c"`: list of allowed values. Only enforced for string fields.
-- `config:"credential|connection|schedule"`: configuration layer the field
-  belongs to. Empty means the field is not user-facing.
-- `advanced:"true"`: field should be hidden behind an "advanced" toggle.
-- `visible_when:"<field>=<value>"`: field only renders when the referenced
-  sibling matches the given value.
-
-Here's a connector configuration that exercises the new tags:
-
-    type GitHubSource struct {
-        AuthMethod string `enum:"oauth,token" config:"credential" required:"true"`
-        Token      string `config:"credential" visible_when:"auth_method=token"`
-        Repo       string `config:"connection" required:"true"`
-        PageSize   int    `config:"connection" default:"100" advanced:"true"`
-        Schedule   string `config:"schedule" default:"0 * * * *"`
-    }
-
-`AuthMethod` accepts only `"oauth"` or `"token"`. `Token` lives in the
-credential layer (so the UI masks it) and is shown only when `AuthMethod` is
-`"token"`. `Repo` is the only field the user must always fill in. `PageSize`
-defaults to `100` and is hidden behind an "advanced" toggle. `Schedule`
-defaults to running every hour.
-
-A valid JSON document for this type looks like:
-
-    {
-        "auth_method": "token",
-        "token": "ghp_xxx",
-        "repo": "birdie-ai/jsonspec",
-        "page_size": 200,
-        "schedule": "0 */6 * * *"
-    }
+- `config:"credential|connection|schedule"`: configuration layer the field belongs to. Empty
+  means the field is not user-facing.
+- `advanced:"true"`: field should be hidden behind an "advanced" toggle in the frontend for
+  connector management.
+- `visible_when:"<field>=<value>"`: field only renders in the frontend for connector
+  management when the referenced field matches the given value.
 
 
 ## Spec as JSON
 
 The Spec type is written so it can be marshaled and unmarshaled with `encoding/json`. Here's what
-the spec for the Person type would look like:
+the spec for the DatabaseSource type above would look like:
 
     {
         "type": "object",
         "fields": {
-            "id": {
-                "type": "int",
-                "description": "Unique ID",
-                "required": true
-            },
-            "first_name": {
-                "type": "string"
-            },
-            "last_name": {
+            "auth_method": {
                 "type": "string",
-                "required": true
+                "description": "Authentication method",
+                "enum": ["password", "iam"],
+                "required": true,
+                "config": "credential"
+            },
+            "user": {
+                "type": "string",
+                "required": true,
+                "config": "credential"
             },
             "password": {
                 "type": "string",
-                "required": true,
-                "tags": [
-                    "secret"
-                ]
+                "tags": ["secret"],
+                "config": "credential",
+                "visible_when": "auth_method=password"
             },
-            "is_admin": {
-                "type": "boolean"
+            "host": {
+                "type": "string",
+                "required": true,
+                "config": "connection"
+            },
+            "port": {
+                "type": "integer",
+                "default": 5432,
+                "config": "connection",
+                "advanced": true
+            },
+            "schedule": {
+                "type": "string",
+                "default": "0 * * * *",
+                "config": "schedule"
             }
         }
     }

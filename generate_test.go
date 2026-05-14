@@ -225,6 +225,10 @@ func TestParseTag(t *testing.T) {
 			`required:"true"     tags:"secret"`,
 			&Field{Required: true, Tags: []string{"secret"}},
 		},
+		{
+			`visible_when:"auth_method=token"`,
+			&Field{VisibleWhen: "auth_method=token"},
+		},
 	}
 	for _, c := range cases {
 		field := new(Field)

@@ -117,7 +117,7 @@ func translateName(name string) string {
 }
 
 // match the first key:"value" pair in a tag
-var tagRe = regexp.MustCompile(`^([a-z]+):("[^"]+")( +.*)?$`)
+var tagRe = regexp.MustCompile(`^([a-z][a-z_]*):("[^"]+")( +.*)?$`)
 
 func parseTag(field *Field, tag string) error {
 	remaining := tag
