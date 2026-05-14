@@ -87,12 +87,13 @@ func (s *Spec) Validate(value any) error {
 			return errors.New("expected boolean value")
 		}
 	case String:
-		v, ok := value.(string)
-		if !ok {
+		switch v := value.(type) {
+		case string:
+			if len(s.Enum) > 0 && !slices.Contains(s.Enum, v) {
+				return fmt.Errorf("expected one of %v, got %q", s.Enum, v)
+			}
+		default:
 			return errors.New("expected a string")
-		}
-		if len(s.Enum) > 0 && !slices.Contains(s.Enum, v) {
-			return fmt.Errorf("expected one of %v, got %q", s.Enum, v)
 		}
 	case Integer:
 		switch v := value.(type) {

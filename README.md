@@ -45,6 +45,22 @@ This will generate a spec for Person, validate that the input matches the spec, 
 in `person`.
 
 
+## Struct tags
+
+The following tags are recognized on struct fields:
+
+- `description:"..."`: human-readable description of the field.
+- `required:"true"`: the field must be set for the object to be valid.
+- `default:"..."`: default value for the field (parsed according to its type).
+- `tags:"a,b,c"`: list of free-form tags attached to the field.
+- `enum:"a,b,c"`: list of allowed values. Only enforced for string fields.
+- `config:"credential|connection|schedule"`: configuration layer the field
+  belongs to. Empty means the field is not user-facing.
+- `advanced:"true"`: field should be hidden behind an "advanced" toggle.
+- `visible_when:"<field>=<value>"`: field only renders when the referenced
+  sibling matches the given value.
+
+
 ## Spec as JSON
 
 The Spec type is written so it can be marshaled and unmarshaled with `encoding/json`. Here's what
