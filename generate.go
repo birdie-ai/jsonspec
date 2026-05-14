@@ -119,7 +119,7 @@ func translateName(name string) string {
 }
 
 // match the first key:"value" pair in a tag
-var tagRe = regexp.MustCompile(`^([a-z]+):("[^"]+")( +.*)?$`)
+var tagRe = regexp.MustCompile(`^([a-z][a-z_]*):("[^"]+")( +.*)?$`)
 
 func parseTag(field *Field, tag string) error {
 	remaining := tag
@@ -164,10 +164,46 @@ func applyTag(field *Field, key, value string) error {
 			return err
 		}
 		field.Default = defaultValue
+	case "enum":
+		values := strings.Split(value, ",")
+		for i, v := range values {
+			values[i] = strings.TrimSpace(v)
+		}
+		field.Spec.Enum = values
+	case "config":
+		if !isValidConfigLayer(value) {
+			return fmt.Errorf(`invalid config layer %q: want "credential", "connection" or "schedule"`, value)
+		}
+		field.Config = value
+	case "advanced":
+		b, ok := parseBool(value)
+		if !ok {
+			return fmt.Errorf("invalid boolean: %s", value)
+		}
+		field.Advanced = b
+	case "visible_when":
+		if !isValidVisibleWhen(value) {
+			return fmt.Errorf(`invalid visible_when %q: want "<field>=<value>"`, value)
+		}
+		field.VisibleWhen = value
 	default:
 		return fmt.Errorf("unknown tag key: %q", key)
 	}
 	return nil
+}
+
+// isValidConfigLayer reports whether v is a known configuration layer.
+func isValidConfigLayer(v string) bool {
+	return v == "credential" || v == "connection" || v == "schedule"
+}
+
+// isValidVisibleWhen reports whether v matches "<field>=<value>".
+func isValidVisibleWhen(v string) bool {
+	eq := strings.IndexByte(v, '=')
+	if eq <= 0 || eq == len(v)-1 {
+		return false
+	}
+	return strings.IndexByte(v[eq+1:], '=') < 0
 }
 
 func parseBool(s string) (result, ok bool) {

@@ -229,6 +229,10 @@ func TestParseTag(t *testing.T) {
 			`required:"true"     tags:"secret"`,
 			&Field{Required: true, Tags: []string{"secret"}},
 		},
+		{
+			`visible_when:"auth_method=token"`,
+			&Field{VisibleWhen: "auth_method=token"},
+		},
 	}
 	for _, c := range cases {
 		field := new(Field)
@@ -327,5 +331,56 @@ func TestParseDefaultValue(t *testing.T) {
 		if diff := cmp.Diff(c.want, got); diff != "" {
 			t.Errorf("parseDefaultValue(%v, %v) result mismatch (-want +got):\n%s", c.typ, c.value, diff)
 		}
+	}
+}
+
+func TestApplyConfigTags(t *testing.T) {
+	cases := []struct {
+		Name       string
+		Key, Value string
+		Want       *Field
+	}{
+		{"enum splits and trims", "enum", "a, b , c", &Field{Spec: Spec{Enum: []string{"a", "b", "c"}}}},
+		{"config credential", "config", "credential", &Field{Config: "credential"}},
+		{"config connection", "config", "connection", &Field{Config: "connection"}},
+		{"config schedule", "config", "schedule", &Field{Config: "schedule"}},
+		{"advanced true", "advanced", "true", &Field{Advanced: true}},
+		{"advanced false stays zero", "advanced", "false", new(Field)},
+		{"visible_when single condition", "visible_when", "auth=OAuth", &Field{VisibleWhen: "auth=OAuth"}},
+	}
+	for _, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			got := new(Field)
+			err := applyTag(got, c.Key, c.Value)
+			if err != nil {
+				t.Fatalf("applyTag(%q, %q) returned error: %v", c.Key, c.Value, err)
+			}
+			if diff := cmp.Diff(c.Want, got); diff != "" {
+				t.Errorf("applyTag(%q, %q) result mismatch (-want +got):\n%s", c.Key, c.Value, diff)
+			}
+		})
+	}
+}
+
+func TestApplyConfigTagsError(t *testing.T) {
+	cases := []struct {
+		Name       string
+		Key, Value string
+	}{
+		{"config unknown layer", "config", "schedules"},
+		{"config empty", "config", ""},
+		{"advanced non-bool", "advanced", "yes"},
+		{"visible_when missing equals", "visible_when", "auth"},
+		{"visible_when missing field", "visible_when", "=OAuth"},
+		{"visible_when missing value", "visible_when", "auth="},
+		{"visible_when multiple equals", "visible_when", "auth=a=b"},
+	}
+	for _, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			err := applyTag(new(Field), c.Key, c.Value)
+			if err == nil {
+				t.Errorf("applyTag(%q, %q) returned no error", c.Key, c.Value)
+			}
+		})
 	}
 }

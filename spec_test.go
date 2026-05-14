@@ -228,3 +228,40 @@ func TestSpecValidateError(t *testing.T) {
 		}
 	}
 }
+
+func TestSpecValidateEnum(t *testing.T) {
+	type withEnum struct {
+		Auth string `enum:"OAuth,PAT"`
+	}
+	cases := []struct {
+		Name    string
+		Value   any
+		WantErr string
+	}{
+		{"accepts first enum value", map[string]any{"auth": "OAuth"}, ""},
+		{"accepts second enum value", map[string]any{"auth": "PAT"}, ""},
+		{"rejects value outside enum", map[string]any{"auth": "Basic"}, `auth: expected one of [OAuth PAT], got "Basic"`},
+	}
+	spec, err := For(withEnum{})
+	if err != nil {
+		t.Fatalf("For(withEnum{}) returned error: %v", err)
+	}
+	for _, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			err := spec.Validate(c.Value)
+			if c.WantErr == "" {
+				if err != nil {
+					t.Errorf("Validate(%v) returned error: %v", c.Value, err)
+				}
+				return
+			}
+			if err == nil {
+				t.Errorf("Validate(%v) returned no error, want %q", c.Value, c.WantErr)
+				return
+			}
+			if err.Error() != c.WantErr {
+				t.Errorf("Validate(%v) returned %q, want %q", c.Value, err.Error(), c.WantErr)
+			}
+		})
+	}
+}
