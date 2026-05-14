@@ -64,16 +64,17 @@ Here's a connector configuration that exercises the new tags:
 
     type GitHubSource struct {
         AuthMethod string `enum:"oauth,token" config:"credential" required:"true"`
-        Token      string `config:"credential" tags:"secret" visible_when:"auth_method=token"`
+        Token      string `config:"credential" visible_when:"auth_method=token"`
         Repo       string `config:"connection" required:"true"`
         PageSize   int    `config:"connection" default:"100" advanced:"true"`
         Schedule   string `config:"schedule" default:"0 * * * *"`
     }
 
-`AuthMethod` accepts only `"oauth"` or `"token"`. `Token` is a secret that is
-shown to the user only when `AuthMethod` is `"token"`. `Repo` is the only field
-the user must always fill in. `PageSize` defaults to `100` and is hidden behind
-an "advanced" toggle. `Schedule` defaults to running every hour.
+`AuthMethod` accepts only `"oauth"` or `"token"`. `Token` lives in the
+credential layer (so the UI masks it) and is shown only when `AuthMethod` is
+`"token"`. `Repo` is the only field the user must always fill in. `PageSize`
+defaults to `100` and is hidden behind an "advanced" toggle. `Schedule`
+defaults to running every hour.
 
 A valid JSON document for this type looks like:
 
