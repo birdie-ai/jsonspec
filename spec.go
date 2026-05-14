@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"math"
+	"slices"
 	"time"
 )
 
@@ -36,6 +37,9 @@ type Spec struct {
 
 	// Elements defines the elements of an array. Only relevant if Type is [Array].
 	Elements *Spec `json:"elements,omitempty"`
+
+	// Enum is the allowed set of values. Only enforced for [String].
+	Enum []string `json:"enum,omitempty"`
 }
 
 // A Field defines one field in a JSON object.
@@ -50,6 +54,17 @@ type Field struct {
 
 	// Tags is a list of custom tags.
 	Tags []string `json:"tags,omitempty"`
+
+	// Config is the configuration layer the field belongs to: "credential",
+	// "connection" or "schedule". Empty means the field is not user-facing.
+	Config string `json:"config,omitempty"`
+
+	// Advanced is true if the field should be hidden behind an "advanced" toggle.
+	Advanced bool `json:"advanced,omitempty"`
+
+	// VisibleWhen makes the field render only when the referenced sibling
+	// matches the given value
+	VisibleWhen string `json:"visible_when,omitempty"`
 }
 
 // ValidateJSON returns an error if [value] doesn't match the spec.
@@ -72,10 +87,12 @@ func (s *Spec) Validate(value any) error {
 			return errors.New("expected boolean value")
 		}
 	case String:
-		switch value.(type) {
-		case string:
-		default:
+		v, ok := value.(string)
+		if !ok {
 			return errors.New("expected a string")
+		}
+		if len(s.Enum) > 0 && !slices.Contains(s.Enum, v) {
+			return fmt.Errorf("expected one of %v, got %q", s.Enum, v)
 		}
 	case Integer:
 		switch v := value.(type) {
