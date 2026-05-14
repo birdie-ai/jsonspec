@@ -62,22 +62,27 @@ The following tags are recognized on struct fields:
 
 Here's a connector configuration that exercises the new tags:
 
-    type GitHubConfig struct {
-        AuthMethod string `enum:"OAuth,PAT" config:"credential" required:"true"`
-        Token      string `config:"credential" required:"true" visible_when:"auth_method=PAT" tags:"secret"`
-        Org        string `config:"connection" required:"true"`
+    type GitHubSource struct {
+        AuthMethod string `enum:"oauth,token" config:"credential" required:"true"`
+        Token      string `config:"credential" tags:"secret" visible_when:"auth_method=token"`
+        Repo       string `config:"connection" required:"true"`
         PageSize   int    `config:"connection" default:"100" advanced:"true"`
-        Cron       string `config:"schedule" default:"0 * * * *"`
+        Schedule   string `config:"schedule" default:"0 * * * *"`
     }
 
-For this type the library will expect a JSON object like the following:
+`AuthMethod` accepts only `"oauth"` or `"token"`. `Token` is a secret that is
+shown to the user only when `AuthMethod` is `"token"`. `Repo` is the only field
+the user must always fill in. `PageSize` defaults to `100` and is hidden behind
+an "advanced" toggle. `Schedule` defaults to running every hour.
+
+A valid JSON document for this type looks like:
 
     {
-        "auth_method": "PAT",
+        "auth_method": "token",
         "token": "ghp_xxx",
-        "org": "birdie-ai",
-        "page_size": 100,
-        "cron": "0 * * * *"
+        "repo": "birdie-ai/jsonspec",
+        "page_size": 200,
+        "schedule": "0 */6 * * *"
     }
 
 
