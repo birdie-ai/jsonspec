@@ -60,6 +60,26 @@ The following tags are recognized on struct fields:
 - `visible_when:"<field>=<value>"`: field only renders when the referenced
   sibling matches the given value.
 
+Here's a connector configuration that exercises the new tags:
+
+    type GitHubConfig struct {
+        AuthMethod string `enum:"OAuth,PAT" config:"credential" required:"true"`
+        Token      string `config:"credential" required:"true" visible_when:"auth_method=PAT" tags:"secret"`
+        Org        string `config:"connection" required:"true"`
+        PageSize   int    `config:"connection" default:"100" advanced:"true"`
+        Cron       string `config:"schedule" default:"0 * * * *"`
+    }
+
+For this type the library will expect a JSON object like the following:
+
+    {
+        "auth_method": "PAT",
+        "token": "ghp_xxx",
+        "org": "birdie-ai",
+        "page_size": 100,
+        "cron": "0 * * * *"
+    }
+
 
 ## Spec as JSON
 
