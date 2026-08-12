@@ -33,14 +33,26 @@ func Load(source, target any) error {
 		return err
 	}
 
+	return spec.Load(source, target)
+}
+
+// Load load [source] into [target] against this spec, instead of the one derived from [target].
+// Fields the spec leaves out are neither validated nor loaded, so a narrowed spec accepts a source
+// carrying only the fields it kept.
+func (s *Spec) Load(source, target any) error {
+	pointerType := reflect.TypeOf(target)
+	if pointerType.Kind() != reflect.Pointer {
+		return errors.New("argument to Load must be a pointer")
+	}
+
 	// validate source
-	err = spec.Validate(source)
+	err := s.Validate(source)
 	if err != nil {
 		return err
 	}
 
 	// load into target
-	load(spec, source, reflect.ValueOf(target).Elem())
+	load(s, source, reflect.ValueOf(target).Elem())
 
 	return nil
 }

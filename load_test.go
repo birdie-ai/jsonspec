@@ -66,3 +66,77 @@ func TestLoadJSON(t *testing.T) {
 	testLoadJSON(t, `[1, 2, 3]`, []int{1, 2, 3})
 	testLoadJSON(t, `[[1], [2, 3]]`, [][]int{{1}, {2, 3}})
 }
+
+func specFor(t *testing.T, o any) *Spec {
+	t.Helper()
+
+	spec, err := For(o)
+	if err != nil {
+		t.Fatalf("For(%T) returned error: %v", o, err)
+	}
+	return spec
+}
+
+func TestSpecLoad(t *testing.T) {
+	type args struct {
+		Host  string `config:"credential" required:"true"`
+		Auth  string `config:"credential" default:"oauth"`
+		Table string `config:"connection" required:"true"`
+	}
+
+	specWithTable := specFor(t, args{})
+	specWithoutTable := specFor(t, args{})
+	delete(specWithoutTable.Fields, "table")
+
+	cases := []struct {
+		name    string
+		spec    *Spec
+		source  map[string]any
+		want    args
+		wantErr bool
+	}{
+		{
+			name:   "spec without table loads a source without table",
+			spec:   specWithoutTable,
+			source: map[string]any{"host": "https://source.test"},
+			want:   args{Host: "https://source.test", Auth: "oauth"},
+		},
+		{
+			name:   "spec without table ignores a table in the source",
+			spec:   specWithoutTable,
+			source: map[string]any{"host": "https://source.test", "table": "events"},
+			want:   args{Host: "https://source.test", Auth: "oauth"},
+		},
+		{
+			name:    "spec without table still requires the host",
+			spec:    specWithoutTable,
+			source:  map[string]any{"table": "events"},
+			wantErr: true,
+		},
+		{
+			name:    "spec with table requires the table",
+			spec:    specWithTable,
+			source:  map[string]any{"host": "https://source.test"},
+			wantErr: true,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			var got args
+			err := c.spec.Load(c.source, &got)
+			if c.wantErr {
+				if err == nil {
+					t.Fatalf("Load(%v) = nil, want error", c.source)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Load(%v) returned error: %v", c.source, err)
+			}
+			if diff := cmp.Diff(c.want, got); diff != "" {
+				t.Errorf("Load(%v) result mismatch (-want +got):\n%s", c.source, diff)
+			}
+		})
+	}
+}
