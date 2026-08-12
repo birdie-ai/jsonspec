@@ -66,3 +66,59 @@ func TestLoadJSON(t *testing.T) {
 	testLoadJSON(t, `[1, 2, 3]`, []int{1, 2, 3})
 	testLoadJSON(t, `[[1], [2, 3]]`, [][]int{{1}, {2, 3}})
 }
+
+func TestSpecLoad(t *testing.T) {
+	type args struct {
+		Host  string `config:"credential" required:"true"`
+		Auth  string `config:"credential" default:"oauth"`
+		Table string `config:"connection" required:"true"`
+	}
+
+	cases := []struct {
+		name    string
+		source  map[string]any
+		want    args
+		wantErr bool
+	}{
+		{
+			name:   "loads the fields the spec keeps",
+			source: map[string]any{"host": "https://source.test"},
+			want:   args{Host: "https://source.test", Auth: "oauth"},
+		},
+		{
+			name:   "ignores the fields the spec drops",
+			source: map[string]any{"host": "https://source.test", "table": "events"},
+			want:   args{Host: "https://source.test", Auth: "oauth"},
+		},
+		{
+			name:    "still requires the fields the spec keeps",
+			source:  map[string]any{"table": "events"},
+			wantErr: true,
+		},
+	}
+
+	for _, c := range cases {
+		t.Run(c.name, func(t *testing.T) {
+			spec, err := For(args{})
+			if err != nil {
+				t.Fatalf("For() returned error: %v", err)
+			}
+			delete(spec.Fields, "table")
+
+			var got args
+			err = spec.Load(c.source, &got)
+			if c.wantErr {
+				if err == nil {
+					t.Fatalf("Load(%v) = nil, want error", c.source)
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Load(%v) returned error: %v", c.source, err)
+			}
+			if diff := cmp.Diff(c.want, got); diff != "" {
+				t.Errorf("Load(%v) result mismatch (-want +got):\n%s", c.source, diff)
+			}
+		})
+	}
+}
