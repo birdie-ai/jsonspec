@@ -67,6 +67,16 @@ func TestLoadJSON(t *testing.T) {
 	testLoadJSON(t, `[[1], [2, 3]]`, [][]int{{1}, {2, 3}})
 }
 
+func specFor(t *testing.T, o any) *Spec {
+	t.Helper()
+
+	spec, err := For(o)
+	if err != nil {
+		t.Fatalf("For(%T) returned error: %v", o, err)
+	}
+	return spec
+}
+
 func TestSpecLoad(t *testing.T) {
 	type args struct {
 		Host  string `config:"credential" required:"true"`
@@ -74,39 +84,47 @@ func TestSpecLoad(t *testing.T) {
 		Table string `config:"connection" required:"true"`
 	}
 
+	specWithTable := specFor(t, args{})
+	specWithoutTable := specFor(t, args{})
+	delete(specWithoutTable.Fields, "table")
+
 	cases := []struct {
 		name    string
+		spec    *Spec
 		source  map[string]any
 		want    args
 		wantErr bool
 	}{
 		{
-			name:   "loads the fields the spec keeps",
+			name:   "spec without table loads a source without table",
+			spec:   specWithoutTable,
 			source: map[string]any{"host": "https://source.test"},
 			want:   args{Host: "https://source.test", Auth: "oauth"},
 		},
 		{
-			name:   "ignores the fields the spec drops",
+			name:   "spec without table ignores a table in the source",
+			spec:   specWithoutTable,
 			source: map[string]any{"host": "https://source.test", "table": "events"},
 			want:   args{Host: "https://source.test", Auth: "oauth"},
 		},
 		{
-			name:    "still requires the fields the spec keeps",
+			name:    "spec without table still requires the host",
+			spec:    specWithoutTable,
 			source:  map[string]any{"table": "events"},
+			wantErr: true,
+		},
+		{
+			name:    "spec with table requires the table",
+			spec:    specWithTable,
+			source:  map[string]any{"host": "https://source.test"},
 			wantErr: true,
 		},
 	}
 
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			spec, err := For(args{})
-			if err != nil {
-				t.Fatalf("For() returned error: %v", err)
-			}
-			delete(spec.Fields, "table")
-
 			var got args
-			err = spec.Load(c.source, &got)
+			err := c.spec.Load(c.source, &got)
 			if c.wantErr {
 				if err == nil {
 					t.Fatalf("Load(%v) = nil, want error", c.source)
