@@ -40,6 +40,11 @@ type Spec struct {
 
 	// Enum is the allowed set of values. Only enforced for [String].
 	Enum []string `json:"enum,omitempty"`
+
+	// QueryTemplate is a statement a client can show before any data is fetched, with {field}
+	// placeholders naming fields of this spec. It is ignored by Validate and only set for types
+	// implementing [QueryTemplater].
+	QueryTemplate string `json:"query_template,omitempty"`
 }
 
 // A Field defines one field in a JSON object.
