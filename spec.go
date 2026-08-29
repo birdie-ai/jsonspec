@@ -42,8 +42,8 @@ type Spec struct {
 	Enum []string `json:"enum,omitempty"`
 
 	// QueryTemplate is a statement a client can show before any data is fetched, with {field}
-	// placeholders naming fields of this spec. It is ignored by Validate and only set for types
-	// implementing [QueryTemplater].
+	// placeholders naming fields of this spec. It is ignored by Validate, and [For] sets it only
+	// on the spec it returns, never on the spec of a nested field.
 	QueryTemplate string `json:"query_template,omitempty"`
 }
 
