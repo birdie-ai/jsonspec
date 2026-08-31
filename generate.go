@@ -10,13 +10,26 @@ import (
 	"time"
 )
 
+// A QueryTemplater is a type that carries a query template for its own spec.
+type QueryTemplater interface {
+	QueryTemplate() string
+}
+
 // For automatically generates a [Spec] for an object.
 func For(o any) (*Spec, error) {
 	typ := reflect.TypeOf(o)
 	if typ.Kind() == reflect.Pointer {
-		return specForType(typ.Elem())
+		typ = typ.Elem()
 	}
-	return specForType(typ)
+	spec, err := specForType(typ)
+	if err != nil {
+		return nil, err
+	}
+	templater, ok := o.(QueryTemplater)
+	if ok {
+		spec.QueryTemplate = templater.QueryTemplate()
+	}
+	return spec, nil
 }
 
 func specForType(typ reflect.Type) (*Spec, error) {

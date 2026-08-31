@@ -70,6 +70,20 @@ management frontend) and are ignored by `Validate`:
   management when the referenced field matches the given value.
 
 
+## Query template
+
+A spec can also carry a statement that a client shows before any data is fetched, for example the
+query a warehouse connector runs by default. A type provides it by implementing `QueryTemplater`:
+
+    func (DatabaseSource) QueryTemplate() string {
+        return "SELECT * FROM {schema}.{table}"
+    }
+
+`For` copies the returned value into `Spec.QueryTemplate`, marshaled as `query_template`. The
+placeholders name fields of the same spec and are substituted by the client: like the annotation-only
+tags above, the value is metadata for downstream tooling.
+
+
 ## Spec as JSON
 
 The Spec type is written so it can be marshaled and unmarshaled with `encoding/json`. Here's what
