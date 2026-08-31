@@ -57,37 +57,37 @@ func (*pointerQuerySource) QueryTemplate() string { return "SELECT * FROM {table
 
 func TestSpecForQueryTemplate(t *testing.T) {
 	cases := []struct {
-		name string
-		o    any
-		want string
+		name  string
+		input any
+		want  string
 	}{
 		{
-			name: "type implementing the interface, passed as a pointer",
-			o:    new(querySource),
-			want: "SELECT * FROM {catalog}.{table}",
+			name:  "type implementing the interface, passed as a pointer",
+			input: new(querySource),
+			want:  "SELECT * FROM {catalog}.{table}",
 		},
 		{
-			name: "type implementing the interface, passed as a value",
-			o:    querySource{},
-			want: "SELECT * FROM {catalog}.{table}",
+			name:  "type implementing the interface, passed as a value",
+			input: querySource{},
+			want:  "SELECT * FROM {catalog}.{table}",
 		},
 		{
-			name: "type not implementing the interface",
-			o:    struct{ Table string }{},
+			name:  "type not implementing the interface",
+			input: struct{ Table string }{},
 		},
 		{
-			name: "method on the pointer receiver, passed as a value",
-			o:    pointerQuerySource{},
+			name:  "method on the pointer receiver, passed as a value",
+			input: pointerQuerySource{},
 		},
 	}
 	for _, c := range cases {
 		t.Run(c.name, func(t *testing.T) {
-			got, err := For(c.o)
+			got, err := For(c.input)
 			if err != nil {
-				t.Fatalf("For(%v) returned error: %v", c.o, err)
+				t.Fatalf("For(%v) returned error: %v", c.input, err)
 			}
 			if got.QueryTemplate != c.want {
-				t.Errorf("For(%v) query template = %q, want %q", c.o, got.QueryTemplate, c.want)
+				t.Errorf("For(%v) query template = %q, want %q", c.input, got.QueryTemplate, c.want)
 			}
 		})
 	}
