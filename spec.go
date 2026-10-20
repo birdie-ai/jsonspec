@@ -70,6 +70,9 @@ type Field struct {
 	// VisibleWhen makes the field render only when the referenced sibling
 	// matches the given value
 	VisibleWhen string `json:"visible_when,omitempty"`
+
+	// Label is the short name a form shows for the field, leaving Description to explain it.
+	Label string `json:"label,omitempty"`
 }
 
 // ValidateJSON returns an error if [value] doesn't match the spec.
