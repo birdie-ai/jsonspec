@@ -68,6 +68,8 @@ management frontend) and are ignored by `Validate`:
   connector management.
 - `visible_when:"<field>=<value>"`: field only renders in the frontend for connector
   management when the referenced field matches the given value.
+- `label:"..."`: short name the frontend for connector management shows for the field, with
+  `description` as the text that explains it.
 
 
 ## Query template

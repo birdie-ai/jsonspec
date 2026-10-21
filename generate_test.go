@@ -398,6 +398,7 @@ func TestApplyConfigTags(t *testing.T) {
 		{"advanced true", "advanced", "true", &Field{Advanced: true}},
 		{"advanced false stays zero", "advanced", "false", new(Field)},
 		{"visible_when single condition", "visible_when", "auth=OAuth", &Field{VisibleWhen: "auth=OAuth"}},
+		{"label", "label", "Warehouse ID", &Field{Label: "Warehouse ID"}},
 	}
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {

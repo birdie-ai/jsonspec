@@ -199,6 +199,8 @@ func applyTag(field *Field, key, value string) error {
 			return fmt.Errorf(`invalid visible_when %q: want "<field>=<value>"`, value)
 		}
 		field.VisibleWhen = value
+	case "label":
+		field.Label = value
 	default:
 		return fmt.Errorf("unknown tag key: %q", key)
 	}
