@@ -183,6 +183,12 @@ func applyTag(field *Field, key, value string) error {
 			values[i] = strings.TrimSpace(v)
 		}
 		field.Spec.Enum = values
+	case "min":
+		minimum, err := strconv.ParseFloat(value, 64)
+		if err != nil {
+			return fmt.Errorf("invalid min %q: %w", value, err)
+		}
+		field.Spec.Min = &minimum
 	case "config":
 		if !isValidConfigLayer(value) {
 			return fmt.Errorf(`invalid config layer %q: want "credential", "connection" or "schedule"`, value)

@@ -41,6 +41,9 @@ type Spec struct {
 	// Enum is the allowed set of values. Only enforced for [String].
 	Enum []string `json:"enum,omitempty"`
 
+	// Min is the smallest allowed value. Only enforced for [Integer] and [Number].
+	Min *float64 `json:"min,omitempty"`
+
 	// QueryTemplate is a statement a client can show before any data is fetched, with {field}
 	// placeholders naming fields of this spec. It is ignored by Validate, and [For] sets it only
 	// on the spec it returns, never on the spec of a nested field.
@@ -113,12 +116,14 @@ func (s *Spec) Validate(value any) error {
 		default:
 			return errors.New("expected an integer")
 		}
+		return s.validateMin(value)
 	case Number:
 		switch value.(type) {
 		case int, int64, float64:
 		default:
 			return errors.New("expected a number")
 		}
+		return s.validateMin(value)
 	case Datetime:
 		switch value := value.(type) {
 		case time.Time:
@@ -163,6 +168,26 @@ func (s *Spec) Validate(value any) error {
 				return fmt.Errorf("element %d: %v", index, err)
 			}
 		}
+	}
+	return nil
+}
+
+// validateMin returns an error if the number value is below [Spec.Min].
+func (s *Spec) validateMin(value any) error {
+	if s.Min == nil {
+		return nil
+	}
+	var number float64
+	switch v := value.(type) {
+	case int:
+		number = float64(v)
+	case int64:
+		number = float64(v)
+	case float64:
+		number = v
+	}
+	if number < *s.Min {
+		return fmt.Errorf("expected at least %v, got %v", *s.Min, value)
 	}
 	return nil
 }

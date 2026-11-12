@@ -55,6 +55,7 @@ Tags that affect input validation:
 
 - `required:"true"`: the field must be provided in the JSON as a non-zero value.
 - `enum:"a,b,c"`: list of allowed values. Only enforced for string fields.
+- `min:"n"`: smallest allowed value. Only enforced for integer and number fields.
 
 Tags that only annotate the generated spec for downstream tooling (such as the connector
 management frontend) and are ignored by `Validate`:

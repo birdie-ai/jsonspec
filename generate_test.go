@@ -386,6 +386,7 @@ func TestParseDefaultValue(t *testing.T) {
 }
 
 func TestApplyConfigTags(t *testing.T) {
+	minOne := 1.0
 	cases := []struct {
 		Name       string
 		Key, Value string
@@ -399,6 +400,7 @@ func TestApplyConfigTags(t *testing.T) {
 		{"advanced false stays zero", "advanced", "false", new(Field)},
 		{"visible_when single condition", "visible_when", "auth=OAuth", &Field{VisibleWhen: "auth=OAuth"}},
 		{"label", "label", "Warehouse ID", &Field{Label: "Warehouse ID"}},
+		{"min", "min", "1", &Field{Spec: Spec{Min: &minOne}}},
 	}
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {
@@ -426,6 +428,7 @@ func TestApplyConfigTagsError(t *testing.T) {
 		{"visible_when missing field", "visible_when", "=OAuth"},
 		{"visible_when missing value", "visible_when", "auth="},
 		{"visible_when multiple equals", "visible_when", "auth=a=b"},
+		{"min non-number", "min", "one"},
 	}
 	for _, c := range cases {
 		t.Run(c.Name, func(t *testing.T) {

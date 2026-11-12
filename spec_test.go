@@ -265,3 +265,43 @@ func TestSpecValidateEnum(t *testing.T) {
 		})
 	}
 }
+
+func TestSpecValidateMin(t *testing.T) {
+	type withMin struct {
+		Concurrency int     `min:"1"`
+		Ratio       float64 `min:"0.5"`
+	}
+	cases := []struct {
+		Name    string
+		Value   any
+		WantErr string
+	}{
+		{"accepts the minimum", map[string]any{"concurrency": 1.0, "ratio": 0.5}, ""},
+		{"accepts a value above the minimum", map[string]any{"concurrency": 5.0, "ratio": 2.0}, ""},
+		{"accepts a missing field", map[string]any{}, ""},
+		{"rejects an integer below the minimum", map[string]any{"concurrency": 0.0}, "concurrency: expected at least 1, got 0"},
+		{"rejects a number below the minimum", map[string]any{"ratio": 0.25}, "ratio: expected at least 0.5, got 0.25"},
+	}
+	spec, err := For(withMin{})
+	if err != nil {
+		t.Fatalf("For(withMin{}) returned error: %v", err)
+	}
+	for _, c := range cases {
+		t.Run(c.Name, func(t *testing.T) {
+			err := spec.Validate(c.Value)
+			if c.WantErr == "" {
+				if err != nil {
+					t.Errorf("Validate(%v) returned error: %v", c.Value, err)
+				}
+				return
+			}
+			if err == nil {
+				t.Errorf("Validate(%v) returned no error, want %q", c.Value, c.WantErr)
+				return
+			}
+			if err.Error() != c.WantErr {
+				t.Errorf("Validate(%v) returned %q, want %q", c.Value, err.Error(), c.WantErr)
+			}
+		})
+	}
+}
